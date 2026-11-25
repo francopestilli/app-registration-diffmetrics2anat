@@ -1,5 +1,47 @@
 # Diffusion Metrics-to-Anatomical Registration
 
+<!-- brainlife-app:begin (generated from the App manifest; edit the manifest, not this block) -->
+
+> **Registers a DTI scalar map (FA, MD, RD or AD) to a T1w or T2w anatomical image with ANTs (translation, rigid, affine or SyN) and reslices it onto the anatomical grid, with QC figures.**
+
+Runs antsRegistration with configurable stages and pyramid depth, then antsApplyTransforms to reslice the moving map onto the anatomical image; outputs the transforms, the resliced map and before/after edge-overlay QC images. Use it to bring diffusion scalar maps onto the anatomical field of view, for example so that tract profiles of an anatomically constrained tractogram do not fall outside the diffusion grid. Only one map is registered: the first available of fa, md, rd, ad; apply the transform to the other maps with app-apply-ants-transform. Not for vector fields such as NODDI dir.
+
+| | |
+|---|---|
+| 📥 **Inputs** | `neuro/tensor` · `neuro/anat/t1w` (optional) · `neuro/anat/t2w` (optional) |
+| 📤 **Outputs** | `neuro/transform/nifti` · `neuro/tensor` · `generic/images` |
+| 🐳 **Container** | `gamorosino/tract_align:v1.1` |
+| ⚙️ **Resources** | 1 CPUs · 1 h walltime |
+| 🔗 **Run it** | [doi.org/10.25663/brainlife.app.978](https://doi.org/10.25663/brainlife.app.978) |
+
+#### 📥 Inputs
+
+| Input | Datatype | Required | Description |
+|---|---|---|---|
+| `tensor_moving` | `neuro/tensor` | yes | DTI scalar maps; the first available map (fa, md, rd, ad) is used as the moving image. 3D scalar volumes. |
+| `t1_fixed` | `neuro/anat/t1w` | no | T1-weighted anatomical reference (fixed image). Used if present. |
+| `t2_fixed` | `neuro/anat/t2w` | no | T2-weighted anatomical reference, used only when no T1w is given. At least one of t1_fixed or t2_fixed is required. |
+
+#### 📤 Outputs
+
+| Output | Datatype | Description |
+|---|---|---|
+| `transformations` | `neuro/transform/nifti` | Affine + optional warp/inverse-warp computed by ANTs registration. |
+| `transformed` | `neuro/tensor` | The registered scalar map, resliced onto the anatomical grid. |
+| `figures` | `generic/images` | Registration QC: edge-overlay before/after, orthoview + per-plane. |
+
+<details>
+<summary><b>⚙️ Parameters</b> (2)</summary>
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `transformation` | enum | `rigid` | Stages to run: translation only, +rigid, +affine, or +nonlinear (SyN). Options: `translation`, `rigid`, `affine`, `nonlinear`. |
+| `settings` | enum | `1` | Depth of the multiresolution (pyramidal) registration strategy. Higher = more levels, finer correspondence, slower. Options: `1`, `2`, `3`, `4`. |
+
+</details>
+
+<!-- brainlife-app:end -->
+
 A reproducible and automated pipeline to register a diffusion-derived scalar
 map — tensor-based (FA, MD, RD, AD) or NODDI-based (NDI, ISOVF, ODI) — to an
 anatomical MRI reference (e.g. T1-weighted), using configurable transformation
